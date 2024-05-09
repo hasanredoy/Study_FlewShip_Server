@@ -36,10 +36,17 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
-
+// console.log(uri);
 async function run() {
   try {
-  
+  // feature collection 
+  const featureCollection = client.db('FeaturesDB').collection('features')
+// feature api 
+  app.get('/features' , async(req , res)=>{
+    const getFeature = featureCollection.find()
+    const result = await getFeature.toArray()
+    res.send(result)
+  })
   } finally {
    
   }

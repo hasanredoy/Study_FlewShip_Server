@@ -40,6 +40,27 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
 
+  // assignments api 
+  const assignmentsCollection = client.db('assignmentsDB').collection('assignments')
+
+  // getting assignment api 
+  app.get('/assignments', async(req , res)=>{
+    const data = assignmentsCollection.find()
+   
+    const result = await data.toArray()
+    res.send(result)
+  })
+  // posting on assignment api 
+  app.post('/assignments', async(req , res)=>{
+    const data = req.body;
+    console.log(data);
+    const result = await assignmentsCollection.insertOne(data)
+    res.send(result)
+  })
+
+
+
+
   // online study benefit collection
   const benefitCollection= client.db('Online-study-benifitsDB').collection('benfitsOfOnlineStudy') 
 

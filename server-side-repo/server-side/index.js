@@ -39,6 +39,19 @@ const client = new MongoClient(uri, {
 // console.log(uri);
 async function run() {
   try {
+
+  // online study benefit collection
+  const benefitCollection= client.db('Online-study-benifitsDB').collection('benfitsOfOnlineStudy') 
+
+  app.get('/benefits' , async(req , res)=>{
+    const getBenefit = benefitCollection.find()
+    const result = await getBenefit.toArray()
+    res.send(result)
+  })
+
+
+
+
   // feature collection 
   const featureCollection = client.db('FeaturesDB').collection('features')
 // feature api 
@@ -47,6 +60,8 @@ async function run() {
     const result = await getFeature.toArray()
     res.send(result)
   })
+
+
   } finally {
    
   }

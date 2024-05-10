@@ -16,7 +16,8 @@ app.use(cors({
   origin: [
     "http://localhost:5173",
     "http://localhost:5174",
-     
+     'https://study-flewship-a-11.firebaseapp.com',
+     'https://study-flewship-a-11.web.app'
   ],
   credentials: true,
 }))

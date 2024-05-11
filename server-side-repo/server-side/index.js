@@ -100,6 +100,33 @@ app.delete('/assignments/:id', async(req,res)=>{
   const result = await assignmentsCollection.deleteOne(filter)
   res.send(result)
 })
+ 
+
+// submitted assignments api 
+const submittedAssignmentsCollection = client
+      .db("submittedAssignmentsDB")
+      .collection("submitted");
+
+      // getting assignment api
+    app.get("/submittedAssignment", async (req, res) => {
+      
+      let query = {}
+      if(req.query?.filter){
+        query={levels: req.query.filter }
+      }
+      const data = submittedAssignmentsCollection.find(query);
+
+      const result = await data.toArray();
+      res.send(result);
+    });
+    // posting on assignment api
+    app.post("/submittedAssignment", async (req, res) => {
+     
+      const data = req.body;
+      console.log(data);
+      const result = await submittedAssignmentsCollection.insertOne(data);
+      res.send(result);
+    });
 
 
     // online study benefit collection

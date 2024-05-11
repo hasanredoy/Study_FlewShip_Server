@@ -87,6 +87,15 @@ async function run() {
       res.send(result)
     });
 
+// delete an assignment
+app.delete('/assignments/:id', async(req,res)=>{
+  const id = req.params.id
+  const filter={_id: new ObjectId(id)}
+  const result = await assignmentsCollection.deleteOne(filter)
+  res.send(result)
+})
+
+
     // online study benefit collection
     const benefitCollection = client
       .db("Online-study-benifitsDB")

@@ -45,13 +45,19 @@ async function run() {
 
     // getting assignment api
     app.get("/assignments", async (req, res) => {
-      const data = assignmentsCollection.find();
+      
+      let query = {}
+      if(req.query?.filter){
+        query={levels: req.query.filter }
+      }
+      const data = assignmentsCollection.find(query);
 
       const result = await data.toArray();
       res.send(result);
     });
     // posting on assignment api
     app.post("/assignments", async (req, res) => {
+     
       const data = req.body;
       console.log(data);
       const result = await assignmentsCollection.insertOne(data);

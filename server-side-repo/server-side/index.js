@@ -111,8 +111,8 @@ const submittedAssignmentsCollection = client
     app.get("/submittedAssignment", async (req, res) => {
       
       let query = {}
-      if(req.query?.filter){
-        query={levels: req.query.filter }
+      if(req.query?.email){
+        query={userEmail: req.query.email }
       }
       const data = submittedAssignmentsCollection.find(query);
 
@@ -136,6 +136,30 @@ const submittedAssignmentsCollection = client
       const result = await submittedAssignmentsCollection.insertOne(data);
       res.send(result);
     });
+
+      // update single submitted assignment api
+    app.put("/submittedAssignment/:id", async (req, res) => {
+      
+      const id = req.params.id
+      const filter={_id: new ObjectId(id)}
+      const options={upsert:true}
+      const markData =req.body
+      const update = {
+        $set:{
+          pdf: markData.pdf,
+          note: markData.note,
+          userEmail: markData.userEmail,
+          access: markData.access,
+          status: markData.status,
+          title: markData.title,
+          name: markData.name,
+          marks: markData.marks,
+        }
+      }
+      const result = await submittedAssignmentsCollection.updateOne(filter,update,options);
+      res.send(result);
+    });
+    
 
 
     // online study benefit collection

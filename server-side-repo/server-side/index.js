@@ -107,7 +107,7 @@ const submittedAssignmentsCollection = client
       .db("submittedAssignmentsDB")
       .collection("submitted");
 
-      // getting assignment api
+      // getting submitted assignment api
     app.get("/submittedAssignment", async (req, res) => {
       
       let query = {}
@@ -117,6 +117,15 @@ const submittedAssignmentsCollection = client
       const data = submittedAssignmentsCollection.find(query);
 
       const result = await data.toArray();
+      res.send(result);
+    });
+      // getting single submitted assignment api
+    app.get("/submittedAssignment/:id", async (req, res) => {
+      
+      const id = req.params.id
+      const filter={_id: new ObjectId(id)}
+
+      const result = await submittedAssignmentsCollection.findOne(filter);
       res.send(result);
     });
     // posting on assignment api

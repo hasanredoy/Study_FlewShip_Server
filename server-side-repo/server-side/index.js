@@ -36,27 +36,70 @@ const client = new MongoClient(uri, {
   },
 });
 // console.log(uri);
+
+// middle wares 
+const verifyToken = (req, res, next) => {
+  const token = req?.cookies?.token;
+  // console.log('token from cookies' , req?.cookies?.token);
+  if (!token) {
+    return res.status(401).send({ message: "unauthorized" });
+  }
+
+  jwt.verify(token, process.env.API_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: "unauthorized" });
+    }
+    req.user = decoded;
+    next();
+  });
+};
+
+const cookieOptions = {
+  httpOnly: true,
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+  secure: process.env.NODE_ENV === "production" ? true : false,
+};
 async function run() {
   try {
+
+ // auth api
+ app.post("/jwt", async (req, res) => {
+  const user = req.body;
+  console.log("user for token", user);
+  const token = jwt.sign(user, process.env.API_TOKEN_SECRET, {
+    expiresIn: "1h",
+  });
+  console.log(token);
+
+  res.cookie("token", token, cookieOptions).send({ token });
+});
+// setting cookies clear while user is logged out
+app.post("/logout", async (req, res) => {
+  const user = req.body;
+  console.log("logging out user", user);
+  res.clearCookie("token", { ...cookieOptions ,maxAge: 0 }).send({ success: true });
+});
+
     // assignments api
     const assignmentsCollection = client
       .db("assignmentsDB")
       .collection("assignments");
 
     // getting assignment api
-    app.get("/assignments", async (req, res) => {
+    app.get("/assignments",async (req, res) => {
       
       let query = {}
       if(req.query?.filter){
         query={levels: req.query.filter }
       }
+     
       const data = assignmentsCollection.find(query);
 
       const result = await data.toArray();
       res.send(result);
     });
     // posting on assignment api
-    app.post("/assignments", async (req, res) => {
+    app.post("/assignments", verifyToken, async (req, res) => {
      
       const data = req.body;
       console.log(data);
@@ -64,7 +107,7 @@ async function run() {
       res.send(result);
     });
   // getting single assignment 
-    app.get("/assignments/:id", async (req, res) => {
+    app.get("/assignments/:id",  async (req, res) => {
      
       const id = req.params.id
       const filter = {_id : new ObjectId(id)}
@@ -108,11 +151,14 @@ const submittedAssignmentsCollection = client
       .collection("submitted");
 
       // getting submitted assignment api
-    app.get("/submittedAssignment", async (req, res) => {
+    app.get("/submittedAssignment", verifyToken,async (req, res) => {
       
       let query = {}
       if(req.query?.email){
         query={userEmail: req.query.email }
+      }
+      if (req.query?.email !== req.user?.email) {
+        return res.status(403).send({ message: "forbidden" });
       }
       const data = submittedAssignmentsCollection.find(query);
 
@@ -154,6 +200,8 @@ const submittedAssignmentsCollection = client
           title: markData.title,
           name: markData.name,
           marks: markData.marks,
+          obtainedMarks:markData.obtainedMarks,
+          Feedback:markData.Feedback
         }
       }
       const result = await submittedAssignmentsCollection.updateOne(filter,update,options);

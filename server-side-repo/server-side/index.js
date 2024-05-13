@@ -36,29 +36,30 @@ const client = new MongoClient(uri, {
   },
 });
 // console.log(uri);
-
+const cookieOptions = {
+  httpOnly: true,
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+  secure: process.env.NODE_ENV === "production" ? true : false,
+};
 // middle wares 
 const verifyToken = (req, res, next) => {
   const token = req?.cookies?.token;
-  // console.log('token from cookies' , req?.cookies?.token);
+  console.log(req?.cookies);
+  console.log('token from cookies' , req?.cookies?.token);
   if (!token) {
-    return res.status(401).send({ message: "unauthorized" });
+    return res.status(405).send({ message: "unauthorized" });
   }
 
   jwt.verify(token, process.env.API_TOKEN_SECRET, (err, decoded) => {
     if (err) {
-      return res.status(401).send({ message: "unauthorized" });
+      return res.status(406).send({ message: "unauthorized" });
     }
     req.user = decoded;
     next();
   });
 };
 
-const cookieOptions = {
-  httpOnly: true,
-  sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-  secure: process.env.NODE_ENV === "production" ? true : false,
-};
+
 async function run() {
   try {
 
@@ -71,7 +72,13 @@ async function run() {
   });
   console.log(token);
 
-  res.cookie("token", token, cookieOptions).send({ token });
+  
+  res.cookie('token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+    })
+  .send({ token });
 });
 // setting cookies clear while user is logged out
 app.post("/logout", async (req, res) => {
@@ -99,7 +106,7 @@ app.post("/logout", async (req, res) => {
       res.send(result);
     });
     // posting on assignment api
-    app.post("/assignments", verifyToken, async (req, res) => {
+    app.post("/assignments",  async (req, res) => {
      
       const data = req.body;
       console.log(data);
@@ -157,9 +164,10 @@ const submittedAssignmentsCollection = client
       if(req.query?.email){
         query={userEmail: req.query.email }
       }
-      if (req.query?.email !== req.user?.email) {
-        return res.status(403).send({ message: "forbidden" });
-      }
+      // if (req.query?.email !== req.user?.email) {
+      //   return res.status(403).send({ message: "forbidden" });
+      // }
+      console.log('req user email ',req?.user?.email);
       const data = submittedAssignmentsCollection.find(query);
 
       const result = await data.toArray();

@@ -38,8 +38,8 @@ const client = new MongoClient(uri, {
 // console.log(uri);
 const cookieOptions = {
   httpOnly: true,
-  sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-  secure: process.env.NODE_ENV === "production" ? true : false,
+  sameSite:"none",
+  secure: true ,
 };
 // middle wares 
 const verifyToken = (req, res, next) => {
@@ -47,12 +47,12 @@ const verifyToken = (req, res, next) => {
   console.log(req?.cookies);
   console.log('token from cookies' , req?.cookies?.token);
   if (!token) {
-    return res.status(405).send({ message: "unauthorized" });
+    return res.status(401).send({ message: "unauthorized" });
   }
 
   jwt.verify(token, process.env.API_TOKEN_SECRET, (err, decoded) => {
     if (err) {
-      return res.status(406).send({ message: "unauthorized" });
+      return res.status(403).send({ message: "unauthorized" });
     }
     req.user = decoded;
     next();
@@ -73,11 +73,7 @@ async function run() {
   console.log(token);
 
   
-  res.cookie('token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-    })
+  res.cookie('token', token, cookieOptions)
   .send({ token });
 });
 // setting cookies clear while user is logged out
@@ -114,7 +110,7 @@ app.post("/logout", async (req, res) => {
       res.send(result);
     });
   // getting single assignment 
-    app.get("/assignments/:id",  async (req, res) => {
+    app.get("/assignments/:id",verifyToken,  async (req, res) => {
      
       const id = req.params.id
       const filter = {_id : new ObjectId(id)}
@@ -174,7 +170,7 @@ const submittedAssignmentsCollection = client
       res.send(result);
     });
       // getting single submitted assignment api
-    app.get("/submittedAssignment/:id", async (req, res) => {
+    app.get("/submittedAssignment/:id",verifyToken,  async (req, res) => {
       
       const id = req.params.id
       const filter={_id: new ObjectId(id)}
